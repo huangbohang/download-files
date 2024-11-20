@@ -8,6 +8,29 @@ export const debouncedSort = (func, delay) => {
     }, delay)
   }
 }
+
+export function isEmpty(v) {
+  switch (typeof v) {
+    case 'undefined':
+      return true
+    case 'string':
+      if (v.replace(/(^[ \t\n\r]*)|([ \t\n\r]*$)/g, '').length === 0) { return true }
+      break
+    case 'boolean':
+      if (!v) return true
+      break
+    case 'number':
+      if (v === 0 || isNaN(v)) return true
+      break
+    case 'object':
+      if (v === null || v.length === 0) return true
+      for (var i in v) {
+        return false
+      }
+      return true
+  }
+  return false
+}
 export const getFileSize = (size) => {
   if (size >= 1073741824) return (size / 1073741824).toFixed(2) + 'G'
   if (size >= 1048576) return (size / 1048576).toFixed(2) + 'M'
@@ -57,4 +80,22 @@ export const chunkArrayByMaxSize = (items, maxSize) => {
   }
 
   return chunks
+}
+
+
+export  const FILE_NAME_TYPE = {
+  //字段
+  FIELD_NAME: 'FIELD_NAME',
+  //表头
+  HEADER_NAME: 'HEADER_NAME',
+  //文件名
+  FILE_NAME: 'FILE_NAME',
+  // 自定义文字
+  CUSTOM_TEXT: 'CUSTOM_TEXT',
+}
+export const FILE_NAME_TYPE_COLOR_MAP = {
+  [FILE_NAME_TYPE.FIELD_NAME]: 'primary',
+  [FILE_NAME_TYPE.HEADER_NAME]: 'warning',
+  [FILE_NAME_TYPE.FILE_NAME]: 'success',
+  [FILE_NAME_TYPE.CUSTOM_TEXT]: 'info',
 }

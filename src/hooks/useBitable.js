@@ -28,7 +28,6 @@ export async function getInfoByTableMetaList(tableMetaList) {
       const table = await bitable.base.getTableById(tableId)
       const fieldMetaList = await table.getFieldMetaList()
       const viewMetaList = await table.getViewMetaList()
-      console.log(table.getViewMetaList)
       results.push({
         tableId,
         tableName,

@@ -83,6 +83,10 @@ const fileCellLength = ref(0)
 const zipProgressText = ref('')
 
 const props = defineProps({
+  attachmentList: {
+    type:Array,
+    default: () => []
+  },
   zipName: {
     type: String,
     default: ''
@@ -124,7 +128,8 @@ const { formData, zipName } = toRefs(props)
 onMounted(async() => {
   const fileDownloader = new FileDownloader({
     ...formData.value,
-    zipName: zipName.value
+    zipName: zipName.value,
+    attachmentList:props.attachmentList
   })
   fileDownloader.on('preding', (cells) => {
     fileCellLength.value += 1

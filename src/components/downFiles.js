@@ -2,7 +2,7 @@ import { bitable } from '@lark-base-open/js-sdk'
 import { saveAs } from 'file-saver'
 import JSZip from 'jszip'
 import axios from 'axios'
-import { chunkArrayByMaxSize } from '@/utils/index.js'
+import { chunkArrayByMaxSize,FILE_NAME_TYPE,isEmpty } from '@/utils/index.js'
 
 import { i18n } from '@/locales/i18n.js'
 import to from 'await-to-js'
@@ -19,6 +19,23 @@ const $t = i18n.global.t
 const MAX_ZIP_SIZE_NUM = 1
 
 const MAX_ZIP_SIZE = MAX_ZIP_SIZE_NUM * 1024 * 1024 * 1024
+
+const getFileNameFun = async ({type,name,id},cell,_this) => {
+
+    if(type === FILE_NAME_TYPE['FILE_NAME']){
+      const name = cell.name
+      return name.split('.')[0]
+    }
+    if(type === FILE_NAME_TYPE['CUSTOM_TEXT']){
+        return name
+    }
+    if(type === FILE_NAME_TYPE['HEADER_NAME']){
+      return _this.attachmentList.find(e=>e.id === cell.fieldId)?.name
+  }
+
+  return await _this.oTable.getCellString(id, cell.recordId)
+    
+}
 
 class FileDownloader {
   constructor(formData) {
@@ -98,16 +115,14 @@ class FileDownloader {
     })
   }
   async setFileNames() {
-    if (this.fileNameType !== 1) return
-    const targetFieldIds = this.fileNameByField
+    const targetFieldIds = this.fileNamekList
     const getFileName = async(cell, fieldIds) => {
+
       const names = await Promise.all(
-        fieldIds.map(fieldId =>
-          this.oTable.getCellString(fieldId, cell.recordId)
-        )
+        fieldIds.map(fieldId =>getFileNameFun(fieldId,cell,this))
       )
-      // 过滤掉空字符串，并用 '-' 连接剩余的名称部分
-      return names.filter(name => name).join(this.nameMark)
+
+      return names.filter(name => name).join("")
     }
 
     const updateCellNames = (cell, newName) => {
@@ -116,7 +131,6 @@ class FileDownloader {
         cell.name = removeSpecialChars(cName)
       }
     }
-
     // 使用 map 创建一个包含所有异步操作的数组
     const promises = this.cellList.map((cell) =>
       getFileName(cell, targetFieldIds)
@@ -128,7 +142,7 @@ class FileDownloader {
     // 使用 names 更新 cellList 中每个 cell 的 name
     names.forEach((name, index) => {
       updateCellNames(this.cellList[index], name)
-    })
+    })    
   }
   async setFolderPath() {
     // 逐个下载
@@ -137,18 +151,23 @@ class FileDownloader {
     if (!this.downloadTypeByFolders) return
 
     // 封装获取和处理文件夹名称的逻辑
-    const getProcessedFolderName = async(fieldKey, recordId) => {
-      const name = await this.oTable.getCellString(fieldKey, recordId)
-      return removeSpecialChars(getFolderName(name)) || $t('uncategorized')
+    const getProcessedFolderName = async(fieldKeys, cell) => {
+      const names = await Promise.all(
+        fieldKeys.map(fieldId =>getFileNameFun(fieldId,cell,this))
+      )
+     
+      const allNames = names.filter(name => name).join("")
+      // const name = await getFileNameFun()
+      return removeSpecialChars(getFolderName(allNames)) || $t('uncategorized')
     }
 
-    const setCellFolderName = async(cell, firstFolderKey, secondFolderKey) => {
+    const setCellFolderName = async(cell, firstFolderKeys, secondFolderKeys) => {
       let parentFolder = ''
-      if (firstFolderKey) {
-        parentFolder += `${await getProcessedFolderName(firstFolderKey, cell.recordId)}/`
+      if (firstFolderKeys && firstFolderKeys.length) {
+        parentFolder += `${await getProcessedFolderName(firstFolderKeys, cell)}/`
       }
-      if (secondFolderKey) {
-        parentFolder += `${await getProcessedFolderName(secondFolderKey, cell.recordId)}/`
+      if (secondFolderKeys && secondFolderKeys.length) {
+        parentFolder += `${await getProcessedFolderName(secondFolderKeys, cell)}/`
       }
       cell.path = parentFolder
     }
@@ -156,7 +175,7 @@ class FileDownloader {
     // 使用 Promise.all 处理所有单元格的文件夹名称设置
     await Promise.all(
       this.cellList.map((cell) =>
-        setCellFolderName(cell, this.firstFolderKey, this.secondFolderKey)
+        setCellFolderName(cell, this.firstFolderKeys, this.secondFolderKeys)
       )
     )
   }
@@ -306,5 +325,7 @@ class FileDownloader {
     this.emit('finshed')
   }
 }
+
+
 
 export default FileDownloader
