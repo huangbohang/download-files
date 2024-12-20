@@ -199,7 +199,23 @@ const finshDownload = () => {
 const attachmentList = computed(() => {
   return activeTableInfo.value
     ? activeTableInfo.value['fieldMetaList'].filter(
-      (item) => item.type === FieldType.Attachment
+      (item) => {
+        if (item.type === FieldType.Attachment) {
+          return true
+        }
+        if (item.type === FieldType.Lookup) {
+          const { property: { refFieldId, refTableId }} = item
+          const refTable = datas.allInfo.find((item) => item.tableId === refTableId)
+          const refField = refTable?.fieldMetaList.find((item) => item.id === refFieldId)
+          console.log(123, refField)
+
+          if (refField?.type === FieldType.Attachment) {
+            return true
+          }
+        }
+        return false
+      }
+
     )
     : []
 })
