@@ -50,7 +50,7 @@ const refreshForm = () => {
       </el-button>
     </div>
     <div class="forms" v-loading="!isVisible">
-      <Form v-if="isVisible" />
+      <Form v-if="isVisible" @finshDownload="refreshForm"/>
     </div>
   </main>
 </template>

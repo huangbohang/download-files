@@ -3,32 +3,51 @@ require('@rushstack/eslint-patch/modern-module-resolution')
 
 module.exports = {
   root: true,
-  'env': {
-    'browser': true,
-    'commonjs': true,
-    'es6': true,
-    'node': true
-
+  env: {
+    browser: true,
+    commonjs: true,
+    es6: true,
+    node: true
+  },
+  'parser': 'vue-eslint-parser',
+  'parserOptions': {
+    'ecmaVersion': 2020,
+    'sourceType': 'module'
+  },
+  globals: {
+    AMap: 'writable'
   },
 
   extends: [
     'plugin:vue/vue3-essential',
     './.eslintrc-auto-import.json',
     'eslint:recommended',
-    '@vue/eslint-config-prettier/skip-formatting'
+    '@vue/eslint-config-prettier/skip-formatting',
+    'plugin:vue/vue3-essential' // Vue.js Vue3 相关的规则
   ],
   rules: {
-    'vue/no-mutating-props': ['error', {
-      'shallowOnly': true
-    }],
-    'vue/multi-word-component-names': 'off',
-    'no-multiple-empty-lines': [1, { max: 1 }],
-    'vue/max-attributes-per-line': [
-      2,
+    'vue/no-side-effects-in-computed-properties': 'off',
+    'vue/require-valid-default-prop': 'off', // 关闭这个规则
+
+    'vue/no-mutating-props': [
+      'error',
       {
-        singleline: 10
+        shallowOnly: true
       }
     ],
+    'vue/multi-word-component-names': 'off',
+    'no-multiple-empty-lines': [1, { max: 1 }],
+
+    'vue/max-attributes-per-line': [
+      'error',
+      {
+        singleline: 99,
+        multiline: {
+          max: 13
+        }
+      }
+    ],
+
     'vue/singleline-html-element-content-newline': 'off',
     'vue/multiline-html-element-content-newline': 'off',
     'vue/no-v-html': 'off',
@@ -245,7 +264,15 @@ module.exports = {
       2,
       'always',
       {
-        markers: ['global', 'globals', 'eslint', 'eslint-disable', '*package', '!', ',']
+        markers: [
+          'global',
+          'globals',
+          'eslint',
+          'eslint-disable',
+          '*package',
+          '!',
+          ','
+        ]
       }
     ],
     'template-curly-spacing': [2, 'never'],
@@ -264,8 +291,6 @@ module.exports = {
       }
     ],
     'array-bracket-spacing': [2, 'never']
-  },
-  parserOptions: {
-    ecmaVersion: 'latest'
   }
+
 }

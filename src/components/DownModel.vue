@@ -64,7 +64,7 @@
   </div>
 </template>
 <script setup>
-import { ref, onMounted, reactive, toRefs, computed, defineEmits } from 'vue'
+import { ref, onMounted, reactive, toRefs, computed, defineEmits, toRaw } from 'vue'
 import ProgressCircle from './ProgressCircle.vue'
 import FileDownloader from './downFiles.js'
 import { i18n } from '@/locales/i18n.js'
@@ -83,6 +83,10 @@ const fileCellLength = ref(0)
 const zipProgressText = ref('')
 
 const props = defineProps({
+  attachmentList: {
+    type: Array,
+    default: () => []
+  },
   zipName: {
     type: String,
     default: ''
@@ -120,11 +124,12 @@ const sortFileInfo = () => {
 }
 
 const debouncedSortFileInfo = debouncedSort(sortFileInfo, 200)
-const { formData, zipName } = toRefs(props)
+const { formData, zipName, attachmentList } = toRefs(props)
 onMounted(async() => {
   const fileDownloader = new FileDownloader({
     ...formData.value,
-    zipName: zipName.value
+    zipName: zipName.value,
+    attachmentList: [...attachmentList.value]
   })
   fileDownloader.on('preding', (cells) => {
     fileCellLength.value += 1
@@ -191,6 +196,7 @@ onMounted(async() => {
   })
   await fileDownloader.startDownload()
 })
+
 </script>
 
 <style scoped lang="scss">
