@@ -31,11 +31,9 @@
         </el-select>
       </el-form-item>
 
-
       <el-form-item :label="'文件命名规则'" prop="fileNamekList">
-        <FileNameInput :options="singleSelectList" v-model="formData.fileNamekList" style="width: 100%" />
+        <FileNameInput  :options="singleSelectList" v-model="formData.fileNamekList" style="width: 100%" />
       </el-form-item>
-
 
       <el-form-item :label="$t('download_method')" prop="downloadType">
         <el-select v-model="formData.downloadType" :placeholder="$t('select_download_method')" style="width: 100%">
@@ -90,7 +88,7 @@
         :zipName="activeTableInfo.tableName" :attachmentList="attachmentList" />
       <template #footer v-if="datas.finshDownload">
         <span class="dialog-footer">
-          <el-button @click="downModelVis = false">{{
+          <el-button @click="finshDownload()">{{
             $t("complete")
           }}</el-button>
         </span>
@@ -99,14 +97,14 @@
   </div>
 </template>
 <script setup>
-import { ref, onMounted, reactive, watch, computed } from 'vue'
+import { ref, onMounted, reactive, watch, computed, defineEmits } from 'vue'
 import { bitable, FieldType, base, PermissionEntity, OperationType } from '@lark-base-open/js-sdk'
-import {isEmpty} from '@/utils/index.js'
+import { isEmpty } from 'lodash'
 import { Download, InfoFilled } from '@element-plus/icons-vue'
 import DownModel from './DownModel.vue'
 import FileNameInput from './FileNameInput.vue'
 import { SUPPORT_TYPES, getInfoByTableMetaList, sortByOrder } from '@/hooks/useBitable.js'
-
+const emit = defineEmits(['finshDownload'])
 const elform = ref(null)
 const loading = ref(true)
 const downModelVis = ref(false)
@@ -120,7 +118,6 @@ const formData = reactive({
   ],
   tableId: '',
   attachmentFileds: [],
-  nameMark: '-',
   viewId: '',
   downloadType: 1,
   downloadTypeByFolders: false,
@@ -157,20 +154,6 @@ const rules = reactive({
     }
   ],
 
-
-  nameMark: [
-    {
-      required: true,
-      message: '请选择输入间隔文字',
-      trigger: 'change'
-    },
-    {
-      pattern: /^[^\/\.<>!@#$%^&*()=\[\]{}|\\:;"'?,~`]*$/,
-      message: '包含一些特殊字符，暂不支持',
-      trigger: 'change'
-    }
-  ],
-
   downloadType: [
     {
       required: true,
@@ -181,16 +164,15 @@ const rules = reactive({
   secondFolderKeys: [
     {
       validator: (rule, value, callback) => {
-
-        if(isEmpty(value)){
+        if (isEmpty(value)) {
           callback()
           return
         }
-        if(isEmpty(formData.firstFolderKeys)) {
+        if (isEmpty(formData.firstFolderKeys)) {
           callback(new Error('请先选择一级目录'))
           return
         }
-   
+        callback()
       },
       trigger: 'change'
     }
@@ -207,6 +189,13 @@ const activeTableInfo = computed(() => {
 const viewList = computed(() => {
   return activeTableInfo.value ? activeTableInfo.value.viewMetaList : []
 })
+const finshDownload = () => {
+  // 下载完成会卡顿，依赖递归，没找到原因，改成刷新页面
+  window.location.reload()
+  // downModelVis.value = false
+  // // 清空
+  // elform.value.resetFields()
+}
 const attachmentList = computed(() => {
   return activeTableInfo.value
     ? activeTableInfo.value['fieldMetaList'].filter(
@@ -216,7 +205,7 @@ const attachmentList = computed(() => {
 })
 watch(
   () => formData.viewId,
-  async (viewId) => {
+  async(viewId) => {
     if (viewId && activeTableInfo.value) {
       const table = await bitable.base.getTableById(formData.tableId)
 
@@ -251,13 +240,12 @@ watch(
   }
 )
 
-const submit = async () => {
+const submit = async() => {
   // 获取下载权限（下载和打印归属一个权限）
   const bool = await base.getPermission({
     entity: PermissionEntity.Base,
     type: OperationType.Printable
   })
-
   if (!bool) {
     await bitable.ui.showToast({
       toastType: 'warning',
@@ -265,8 +253,9 @@ const submit = async () => {
     })
     return
   }
+
   if (!elform.value) return
-  await elform.value.validate(async (valid) => {
+  elform.value.validate((valid) => {
     if (valid) {
       datas.finshDownload = false
       downModelVis.value = true
@@ -274,7 +263,7 @@ const submit = async () => {
   })
 }
 
-onMounted(async () => {
+onMounted(async() => {
   let tableMetaList = await bitable.base.getTableMetaList()
   // 无权限用户。通过以上接口会返回数据，但是name为空
   tableMetaList = tableMetaList.filter((e) => !!e.name)
@@ -290,6 +279,7 @@ onMounted(async () => {
 
   loading.value = false
 })
+
 </script>
 <style lang="scss">
 .form-container {

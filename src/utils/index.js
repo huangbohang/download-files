@@ -82,20 +82,19 @@ export const chunkArrayByMaxSize = (items, maxSize) => {
   return chunks
 }
 
-
-export  const FILE_NAME_TYPE = {
-  //字段
+export const FILE_NAME_TYPE = {
+  // 字段
   FIELD_NAME: 'FIELD_NAME',
-  //表头
+  // 表头
   HEADER_NAME: 'HEADER_NAME',
-  //文件名
+  // 文件名
   FILE_NAME: 'FILE_NAME',
   // 自定义文字
-  CUSTOM_TEXT: 'CUSTOM_TEXT',
+  CUSTOM_TEXT: 'CUSTOM_TEXT'
 }
 export const FILE_NAME_TYPE_COLOR_MAP = {
   [FILE_NAME_TYPE.FIELD_NAME]: 'primary',
   [FILE_NAME_TYPE.HEADER_NAME]: 'warning',
   [FILE_NAME_TYPE.FILE_NAME]: 'success',
-  [FILE_NAME_TYPE.CUSTOM_TEXT]: 'info',
+  [FILE_NAME_TYPE.CUSTOM_TEXT]: 'info'
 }

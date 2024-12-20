@@ -1,9 +1,10 @@
 import { bitable } from '@lark-base-open/js-sdk'
 import { saveAs } from 'file-saver'
 import JSZip from 'jszip'
-import axios from 'axios'
-import { chunkArrayByMaxSize,FILE_NAME_TYPE,isEmpty } from '@/utils/index.js'
 
+import axios from 'axios'
+import { chunkArrayByMaxSize, FILE_NAME_TYPE } from '@/utils/index.js'
+import { cloneDeep } from 'lodash'
 import { i18n } from '@/locales/i18n.js'
 import to from 'await-to-js'
 import { SuperTask } from '@/utils/SuperTask.js'
@@ -20,27 +21,27 @@ const MAX_ZIP_SIZE_NUM = 1
 
 const MAX_ZIP_SIZE = MAX_ZIP_SIZE_NUM * 1024 * 1024 * 1024
 
-const getFileNameFun = async ({type,name,id},cell,_this) => {
-
-    if(type === FILE_NAME_TYPE['FILE_NAME']){
-      const name = cell.name
-      return name.split('.')[0]
-    }
-    if(type === FILE_NAME_TYPE['CUSTOM_TEXT']){
-        return name
-    }
-    if(type === FILE_NAME_TYPE['HEADER_NAME']){
-      return _this.attachmentList.find(e=>e.id === cell.fieldId)?.name
+const getFileNameFun = async({ type, name, id }, cell, _this) => {
+  if (type === FILE_NAME_TYPE['FILE_NAME']) {
+    const name = cell.name
+    return name.split('.')[0]
+  }
+  if (type === FILE_NAME_TYPE['CUSTOM_TEXT']) {
+    return name
+  }
+  if (type === FILE_NAME_TYPE['HEADER_NAME']) {
+    return _this.attachmentList.find(e => e.id === cell.fieldId)?.name
   }
 
   return await _this.oTable.getCellString(id, cell.recordId)
-    
 }
 
 class FileDownloader {
   constructor(formData) {
+    // 克隆一份
+
     Object.keys(formData).map((key) => {
-      this[key] = formData[key]
+      this[key] = cloneDeep(formData[key])
     })
 
     this.oTable = null
@@ -117,12 +118,11 @@ class FileDownloader {
   async setFileNames() {
     const targetFieldIds = this.fileNamekList
     const getFileName = async(cell, fieldIds) => {
-
       const names = await Promise.all(
-        fieldIds.map(fieldId =>getFileNameFun(fieldId,cell,this))
+        fieldIds.map(fieldId => getFileNameFun(fieldId, cell, this))
       )
 
-      return names.filter(name => name).join("")
+      return names.filter(name => name).join('')
     }
 
     const updateCellNames = (cell, newName) => {
@@ -142,21 +142,21 @@ class FileDownloader {
     // 使用 names 更新 cellList 中每个 cell 的 name
     names.forEach((name, index) => {
       updateCellNames(this.cellList[index], name)
-    })    
+    })
   }
   async setFolderPath() {
     // 逐个下载
     if (this.downloadType !== 1) return
     // zip不需要文件夹分类
     if (!this.downloadTypeByFolders) return
-
     // 封装获取和处理文件夹名称的逻辑
     const getProcessedFolderName = async(fieldKeys, cell) => {
       const names = await Promise.all(
-        fieldKeys.map(fieldId =>getFileNameFun(fieldId,cell,this))
+        fieldKeys.map(fieldId => getFileNameFun(fieldId, cell, this))
       )
-     
-      const allNames = names.filter(name => name).join("")
+      console.log(this.attachmentList, cell)
+
+      const allNames = names.filter(name => name).join('')
       // const name = await getFileNameFun()
       return removeSpecialChars(getFolderName(allNames)) || $t('uncategorized')
     }
@@ -325,7 +325,5 @@ class FileDownloader {
     this.emit('finshed')
   }
 }
-
-
 
 export default FileDownloader
